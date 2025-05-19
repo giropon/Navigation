@@ -7,7 +7,7 @@ OpenStreetMapを使用したAndroid向け徒歩ナビゲーションアプリケ
 - OpenStreetMapによる地図表示
 - 現在地の表示と追跡
 - 目的地の設定
-- 現在地から目的地までのルート表示
+- 現在地から目的地までのルート表示（OpenRouteService API使用）
 - 画面中央の十字マーカーによる目的地設定位置の表示
 - 目的地の再設定時に過去の目的地とルートの自動クリア
 
@@ -18,6 +18,9 @@ OpenStreetMapを使用したAndroid向け徒歩ナビゲーションアプリケ
 - OpenStreetMap (osmdroid)
 - Google Play Services Location
 - AndroidX
+- OpenRouteService API
+- Retrofit2
+- OkHttp3
 
 ## 必要条件
 
@@ -25,6 +28,7 @@ OpenStreetMapを使用したAndroid向け徒歩ナビゲーションアプリケ
 - Android SDK 23以上
 - Kotlin 1.9.0以上
 - Gradle 8.0以上
+- OpenRouteService APIキー
 
 ## セットアップ
 
@@ -33,15 +37,24 @@ OpenStreetMapを使用したAndroid向け徒歩ナビゲーションアプリケ
 git clone https://github.com/giropon/Navigation.git
 ```
 
-2. Android Studioでプロジェクトを開く
+2. OpenRouteService APIキーの取得
+   - https://openrouteservice.org/ にアクセス
+   - アカウントを作成
+   - APIキーを取得
+   - `app/src/main/res/values/api_keys.xml`にAPIキーを設定
+   ```xml
+   <string name="openroute_api_key">YOUR_API_KEY</string>
+   ```
 
-3. 必要な権限の確認
+3. Android Studioでプロジェクトを開く
+
+4. 必要な権限の確認
 アプリは以下の権限を必要とします：
 - 位置情報（ACCESS_FINE_LOCATION）
 - 粗い位置情報（ACCESS_COARSE_LOCATION）
 - インターネット接続
 
-4. ビルドと実行
+5. ビルドと実行
 ```bash
 ./gradlew build
 ```
@@ -62,15 +75,20 @@ app/
 │   ├── main/
 │   │   ├── java/com/example/navigation/
 │   │   │   ├── MainActivity.kt          # メインアクティビティ
+│   │   │   ├── api/
+│   │   │   │   └── OpenRouteService.kt  # OpenRouteService APIクライアント
 │   │   │   ├── ui/
 │   │   │   │   ├── components/
 │   │   │   │   │   └── MapView.kt      # 地図表示コンポーネント
 │   │   │   │   └── theme/              # UIテーマ
 │   │   │   └── utils/
-│   │   │       └── LocationUtils.kt    # 位置情報ユーティリティ
+│   │   │       ├── LocationUtils.kt    # 位置情報ユーティリティ
+│   │   │       └── RouteUtils.kt       # ルーティングユーティリティ
 │   │   └── res/                        # リソースファイル
-│   │       └── drawable/
-│   │           └── crosshair.xml       # 目的地設定用十字マーカー
+│   │       ├── drawable/
+│   │       │   └── crosshair.xml       # 目的地設定用十字マーカー
+│   │       └── values/
+│   │           └── api_keys.xml        # APIキー設定
 │   └── test/                           # テストファイル
 └── build.gradle.kts                    # ビルド設定
 ```

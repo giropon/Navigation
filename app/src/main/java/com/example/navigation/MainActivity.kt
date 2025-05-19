@@ -13,14 +13,18 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import com.example.navigation.api.OpenRouteServiceClient
 import com.example.navigation.ui.components.OpenStreetMapView
 import com.example.navigation.ui.components.addMarker
-import com.example.navigation.ui.components.drawRoute
 import com.example.navigation.ui.theme.NavigationTheme
 import com.example.navigation.utils.LocationUtils
+import com.example.navigation.utils.getWalkingRoute
+import com.example.navigation.utils.createRoutePolyline
+import kotlinx.coroutines.launch
 import org.osmdroid.config.Configuration
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
+import android.util.Log
 
 class MainActivity : ComponentActivity() {
     private val locationPermissionRequest = registerForActivityResult(
@@ -40,6 +44,9 @@ class MainActivity : ComponentActivity() {
 
         // OpenStreetMapの設定
         Configuration.getInstance().userAgentValue = packageName
+
+        // OpenRouteServiceの初期化
+        OpenRouteServiceClient.initialize(this)
 
         // 位置情報の権限をリクエスト
         locationPermissionRequest.launch(
@@ -69,9 +76,11 @@ fun NavigationScreen() {
     var currentLocation by remember { mutableStateOf<GeoPoint?>(null) }
     var destinationLocation by remember { mutableStateOf<GeoPoint?>(null) }
     var mapView by remember { mutableStateOf<MapView?>(null) }
+    val coroutineScope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         currentLocation = locationUtils.getCurrentLocation()
+        Log.d("NavigationScreen", "Current location: $currentLocation")
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -82,6 +91,7 @@ fun NavigationScreen() {
                 currentLocation?.let { location ->
                     view.controller.setCenter(location)
                     view.addMarker(location, "現在地")
+                    Log.d("NavigationScreen", "Map centered at current location")
                 }
             }
         )
@@ -108,6 +118,7 @@ fun NavigationScreen() {
             // 目的地設定ボタン（左上）
             Button(
                 onClick = {
+                    Log.d("NavigationScreen", "Destination button clicked")
                     // 過去の目的地とルートを削除
                     mapView?.overlays?.clear()
                     // 現在地のマーカーを再表示
@@ -117,12 +128,29 @@ fun NavigationScreen() {
                     
                     // 新しい目的地を設定
                     val center = mapView?.mapCenter as? GeoPoint
-                    center?.let {
-                        destinationLocation = it
-                        mapView?.addMarker(it, "目的地")
-                        // ルートを描画（実際のルーティングAPIを使用する必要があります）
+                    center?.let { destination ->
+                        Log.d("NavigationScreen", "Setting destination: $destination")
+                        destinationLocation = destination
+                        mapView?.addMarker(destination, "目的地")
+                        
+                        // ルートを取得して表示
                         currentLocation?.let { start ->
-                            mapView?.drawRoute(listOf(start, it))
+                            coroutineScope.launch {
+                                try {
+                                    val routePoints = getWalkingRoute(start, destination)
+                                    Log.d("NavigationScreen", "Route points received: ${routePoints.size}")
+                                    if (routePoints.isNotEmpty()) {
+                                        val routePolyline = createRoutePolyline(routePoints)
+                                        mapView?.overlays?.add(routePolyline)
+                                        mapView?.invalidate()
+                                        Log.d("NavigationScreen", "Route displayed on map")
+                                    } else {
+                                        Log.w("NavigationScreen", "No route points received")
+                                    }
+                                } catch (e: Exception) {
+                                    Log.e("NavigationScreen", "Failed to get route", e)
+                                }
+                            }
                         }
                     }
                 }

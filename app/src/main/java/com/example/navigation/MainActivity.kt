@@ -11,6 +11,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.example.navigation.ui.components.OpenStreetMapView
 import com.example.navigation.ui.components.addMarker
@@ -73,14 +74,9 @@ fun NavigationScreen() {
         currentLocation = locationUtils.getCurrentLocation()
     }
 
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
         OpenStreetMapView(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
+            modifier = Modifier.fillMaxSize(),
             onMapReady = { view ->
                 mapView = view
                 currentLocation?.let { location ->
@@ -90,26 +86,36 @@ fun NavigationScreen() {
             }
         )
 
+        // 画面中央の十字マーカー
+        Box(
+            modifier = Modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center
+        ) {
+            androidx.compose.foundation.Image(
+                painter = painterResource(id = R.drawable.crosshair),
+                contentDescription = "目的地設定位置",
+                modifier = Modifier.size(48.dp)
+            )
+        }
+
+        // ボタンを画面の上部に配置
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly
+                .padding(top = 32.dp, start = 16.dp, end = 16.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            // 目的地設定ボタン（左上）
             Button(
                 onClick = {
-                    // 現在地に戻る
+                    // 過去の目的地とルートを削除
+                    mapView?.overlays?.clear()
+                    // 現在地のマーカーを再表示
                     currentLocation?.let { location ->
-                        mapView?.controller?.setCenter(location)
+                        mapView?.addMarker(location, "現在地")
                     }
-                }
-            ) {
-                Text("現在地")
-            }
-
-            Button(
-                onClick = {
-                    // 目的地を設定
+                    
+                    // 新しい目的地を設定
                     val center = mapView?.mapCenter as? GeoPoint
                     center?.let {
                         destinationLocation = it
@@ -122,6 +128,18 @@ fun NavigationScreen() {
                 }
             ) {
                 Text("目的地設定")
+            }
+
+            // 現在地ボタン（右上）
+            Button(
+                onClick = {
+                    // 現在地に戻る
+                    currentLocation?.let { location ->
+                        mapView?.controller?.setCenter(location)
+                    }
+                }
+            ) {
+                Text("現在地")
             }
         }
     }

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="48dp"
+    android:height="48dp"
+    android:viewportWidth="48"
+    android:viewportHeight="48">
+    
+    <!-- 外側の円 -->
+    <path
+        android:strokeColor="#FF0000"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M24,4C12.95,4 4,12.95 4,24s8.95,20 20,20s20,-8.95 20,-20S35.05,4 24,4z"/>
+    
+    <!-- 水平線 -->
+    <path
+        android:strokeColor="#FF0000"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M16,24h16"/>
+    
+    <!-- 垂直線 -->
+    <path
+        android:strokeColor="#FF0000"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:pathData="M24,16v16"/>
+</vector> 
